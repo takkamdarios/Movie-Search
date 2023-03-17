@@ -1,34 +1,38 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import React, { useState } from 'react';
+import { SearchBar } from './components/SearchBar';
 
-function App() {
-  const [count, setCount] = useState(0)
+type Movie = {
+  imdbID: string;
+  Title: string;
+  Year: string;
+  Poster: string;
+};
+
+type SearchResult = {
+  Search: Movie[];
+};
+
+const API_KEY = 'd37dede0';
+
+const App: React.FC = () => {
+  const [searchResults, setSearchResults] = useState<Movie[]>([]);
+
+  const handleSearch = async (searchTerm: string) => {
+    const url = `https://www.omdbapi.com/?apikey=${API_KEY}&s=${searchTerm}`;
+    const response = await fetch(url);
+    const data: SearchResult = await response.json();
+
+    if (data.Search) {
+      setSearchResults(data.Search);
+    }
+  };
 
   return (
-    <div className="App">
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src="/vite.svg" className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://reactjs.org" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+    <div>
+      <h1>Movie Search</h1>
+      <SearchBar onSearch={handleSearch} />
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
