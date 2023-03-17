@@ -1,5 +1,5 @@
 import { Movie } from "../types";
-
+import { MovieListItem } from '../components/MovieDetails;
 // Define the props for the MovieList component
 interface MovieListProps {
   movies: Movie[];

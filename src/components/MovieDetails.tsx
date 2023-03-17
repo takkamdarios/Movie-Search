@@ -1,14 +1,15 @@
 import React from "react";
 import { Movie } from "../types";
 
+
+
 // Define the props that the MovieDetails component will accept.
-// The props will include a single movie object of type Movie.
 type MovieDetailsProps = {
   movie: Movie;
 };
 
+
 // Define the MovieDetails component as a functional component.
-// The component will accept a single prop of type MovieDetailsProps.
 const MovieDetails = ({ movie }: MovieDetailsProps) => {
   return (
     // Render the details of the movie.
@@ -27,6 +28,7 @@ const MovieDetails = ({ movie }: MovieDetailsProps) => {
     </div>
   );
 };
+
 
 // Export the MovieDetails component as the default export of this module.
 export default MovieDetails;

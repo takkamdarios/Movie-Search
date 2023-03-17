@@ -1,78 +1,86 @@
-import React, { useState } from 'react';
-import './App.css';
+import React, { useState, useEffect } from 'react';
+import { SearchBar } from '../src/components/SearchBar';
+import { MovieList } from '../src/components/MovieList';
+import { MovieDetails } from '../src/components/MovieDetails';
+import { Movie } from '../src/types';
+//run the command 'npm install react-bootsrap' so as to benefit from react-bootstrap
+import { Container, Row, Col, Alert } from 'react-bootstrap';
 
-interface Movie {
-  imdbID: string;
-  Title: string;
-  Year: string;
-  Poster: string;
-}
-
-interface MovieDetails {
-  Plot: string;
-  Runtime: string;
-  Genre: string;
-  imdbRating: string;
-}
+const API_KEY = 'd37dede0';
 
 function App() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [searchResults, setSearchResults] = useState<Movie[]>([]);
-  const [selectedMovie, setSelectedMovie] = useState<MovieDetails | null>(null);
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
-  };
+  // This useEffect hook runs when the selectedMovie state changes, and updates the document title accordingly
+  useEffect(() => {
+    document.title = selectedMovie ? selectedMovie.Title : 'Movie Search';
+  }, [selectedMovie]);
 
-  const handleSearchSubmit = async () => {
-    const apiKey = 'd37dede0';
-    const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&s=${searchTerm}`);
-    const data = await response.json();
-
-    if (data.Search) {
-      setSearchResults(data.Search);
+  // This function fetches movie data from the OMDb API based on the search term, and sets the movies state accordingly
+  const searchMovies = async (searchTerm: string) => {
+    try {
+      const response = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&s=${searchTerm}`);
+      const data = await response.json();
+      if (data.Response === 'True') {
+        setMovies(data.Search);
+        setError(null);
+      } else {
+        setMovies([]);
+        setError(data.Error);
+      }
+    } catch (error) {
+      console.error(error);
+      setMovies([]);
+      setError('An error occurred while searching for movies. Please try again later.');
     }
   };
 
-  const handleMovieClick = async (imdbID: string) => {
-    const apiKey = 'd37dede0';
-    const response = await fetch(`https://www.omdbapi.com/?apikey=${apiKey}&i=${imdbID}`);
-    const data = await response.json();
+  // This function fetches detailed information about a selected movie from the OMDb API, and sets the selectedMovie state accordingly
+  const selectMovie = async (movie: Movie) => {
+    try {
+      const response = await fetch(`https://www.omdbapi.com/?apikey=${API_KEY}&i=${movie.imdbID}&plot=full`);
+      const data = await response.json();
+      setSelectedMovie(data);
+      setError(null);
+    } catch (error) {
+      console.error(error);
+      setSelectedMovie(null);
+      setError('An error occurred while retrieving movie details. Please try again later.');
+    }
+  };
 
-    setSelectedMovie(data);
+  // This function unselects the currently selected movie, and sets the selectedMovie state to null
+  const unselectMovie = () => {
+    setSelectedMovie(null);
   };
 
   return (
-    <div className="App">
-      <header>
-        <h1>Movie Search App</h1>
-      </header>
-      <main>
-        <form onSubmit={(event) => {
-          event.preventDefault();
-          handleSearchSubmit();
-        }}>
-          <input type="text" value={searchTerm} onChange={handleSearchInputChange} placeholder="Enter movie title" />
-          <button type="submit">Search</button>
-        </form>
-        <ul>
-          {searchResults.map(movie => (
-            <li key={movie.imdbID} onClick={() => handleMovieClick(movie.imdbID)}>
-              <h3>{movie.Title} ({movie.Year})</h3>
-              {movie.Poster && <img src={movie.Poster} alt={`Poster for ${movie.Title}`} />}
-            </li>
-          ))}
-        </ul>
-        {selectedMovie && (
-          <div>
-            <h2>{selectedMovie.Plot}</h2>
-            <p>Runtime: {selectedMovie.Runtime}</p>
-            <p>Genre: {selectedMovie.Genre}</p>
-            <p>IMDb Rating: {selectedMovie.imdbRating}</p>
-          </div>
-        )}
-      </main>
-    </div>
+    <Container>
+      <Row>
+        <Col>
+          <h1>Movie Search</h1>
+        </Col>
+      </Row>
+      <Row>
+        <Col>
+          <SearchBar onSearch={searchMovies} />
+        </Col>
+      </Row>
+      {error && (
+        <Row>
+          <Col>
+            <Alert variant="danger">{error}</Alert>
+          </Col>
+        </Row>
+      )}
+      {selectedMovie ? (
+        <MovieDetails movie={selectedMovie} onClose={unselectMovie} />
+      ) : (
+        <MovieList movies={movies} onMovieClick={selectMovie} />
+      )}
+    </Container>
   );
 }
 
